@@ -1,0 +1,24 @@
+{
+  "name": "focusflow-backend",
+  "version": "1.0.0",
+  "description": "FocusFlow - Cloud-Based Pomodoro Study Tracker Backend & Smart Session Analytics",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "export:user": "node scripts/export_user_sessions.js",
+    "generate:synthetic": "node scripts/generate_synthetic_sessions.js",
+    "migrate:backfill": "node scripts/migrate_backfill_sessions.js",
+    "seed:sample": "node scripts/seed_sample_user.js"
+  },
+  "keywords": ["pomodoro", "focusflow", "study-tracker", "mern", "analytics", "ml-dataset"],
+  "author": "FocusFlow Team",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.9.5"
+  }
+}

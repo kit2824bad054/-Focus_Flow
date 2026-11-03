@@ -1,0 +1,38 @@
+{
+  "model_name": "Logistic Regression",
+  "model_class": "LogisticRegression",
+  "trained_at": "2026-11-02T15:08:46.192463+00:00",
+  "dataset_rows": 600,
+  "features": [
+    "time_of_day",
+    "day_of_week",
+    "task_priority",
+    "duration_minutes"
+  ],
+  "best_metrics": {
+    "accuracy": 0.8417,
+    "precision": 0.8403,
+    "recall": 1.0,
+    "f1_score": 0.9132
+  },
+  "comparison": {
+    "Logistic Regression": {
+      "accuracy": 0.8417,
+      "precision": 0.8403,
+      "recall": 1.0,
+      "f1_score": 0.9132
+    },
+    "Decision Tree": {
+      "accuracy": 0.7917,
+      "precision": 0.844,
+      "recall": 0.92,
+      "f1_score": 0.8804
+    },
+    "Random Forest": {
+      "accuracy": 0.8333,
+      "precision": 0.8448,
+      "recall": 0.98,
+      "f1_score": 0.9074
+    }
+  }
+}

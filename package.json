@@ -11,10 +11,18 @@
     "migrate:backfill": "node scripts/migrate_backfill_sessions.js",
     "seed:sample": "node scripts/seed_sample_user.js"
   },
-  "keywords": ["pomodoro", "focusflow", "study-tracker", "mern", "analytics", "ml-dataset"],
+  "keywords": [
+    "pomodoro",
+    "focusflow",
+    "study-tracker",
+    "mern",
+    "analytics",
+    "ml-dataset"
+  ],
   "author": "FocusFlow Team",
   "license": "ISC",
   "dependencies": {
+    "axios": "^1.21.0",
     "bcryptjs": "^3.0.2",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",

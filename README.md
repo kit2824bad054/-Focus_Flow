@@ -1,92 +1,138 @@
-# FocusFlow - Smart Session Suggestions Data Preparation (Phase 1)
+# FocusFlow - Smart Pomodoro Study Tracker with ML Suggestions
 
-This phase prepares the data architecture for FocusFlow's upcoming **Smart Session Suggestions** machine learning feature. It upgrades the MongoDB Mongoose schema to capture fine-grained behavioral signals, provides backfill tooling for legacy documents, and establishes data export pipelines for real and synthetic sessions.
+> 🌐 **Live Demo Website**: [https://kit2824bad054.github.io/-Focus_Flow/](https://kit2824bad054.github.io/-Focus_Flow/)  
+> 🔗 **GitHub Repository**: [https://github.com/kit2824bad054/-Focus_Flow](https://github.com/kit2824bad054/-Focus_Flow)
 
----
-
-## 1. Schema Review & Audit
-
-### Original (Baseline) Session Schema
-```javascript
-const sessionSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  task: { type: mongoose.Schema.Types.ObjectId, ref: 'Task' },
-  duration: { type: Number, default: 25 },
-}, { timestamps: true });
-```
-
-### Audit of Required ML Signal Dimensions
-
-| Required Signal | Baseline Schema Status | Upgraded Schema Implementation |
-|---|---|---|
-| **Session start timestamp** | ❌ Missing (`createdAt` only reflected DB insertion time) | Added `startTime: { type: Date, required: true, default: Date.now, index: true }` |
-| **Day of week** | ❌ Missing (required manual runtime parsing) | Added `dayOfWeek: { type: String, enum: ['Sunday', ... 'Saturday'], index: true }` with auto-population pre-save hook |
-| **Task priority** | ❌ Missing on Session (resided only in `Task` document) | Added `taskPriority: { type: String, enum: ['Low', 'Medium', 'High', 'None'], default: 'Medium', index: true }` (denormalized for direct ML queries) |
-| **Session duration** | ⚠️ Ambiguous (`duration` had no explicit units or constraints) | Standardized to `durationMinutes: { type: Number, required: true, min: 1, default: 25 }` + `actualDurationMinutes` |
-| **Completed vs. Abandoned** | ❌ Missing (only completed sessions were stored or no status recorded) | Added `completed: { type: Boolean, required: true, index: true }`, `status: { type: String, enum: ['completed', 'abandoned', 'interrupted'] }`, and `abandonReason` |
+FocusFlow is a cloud-based MERN-stack Pomodoro study tracker augmented with an autonomous **Python Machine Learning Microservice**. It analyzes historical study sessions (circadian rhythms, fatigue curves, task priorities, and completion trends) to recommend the **top 3 optimal focus time windows** for each user.
 
 ---
 
-## 2. Updated Mongoose Schema
+## 🌟 Key Features
 
-The updated schema is located at [`models/Session.js`](file:///c:/Users/Dharani/OneDrive/Documents/Cloud%20project/models/Session.js).
-It includes:
-- Strict validation and default fallbacks.
-- Compound indexes (`{ user: 1, startTime: -1 }` and `{ dayOfWeek: 1, timeOfDay: 1 }`).
-- Pre-save hooks to automatically compute `dayOfWeek` from `startTime` and sync legacy `duration` aliases.
-- Virtual properties for formatted time strings and categorical time buckets.
-
----
-
-## 3. Migration & Backfill Note for Existing Documents
-
-For existing documents stored in MongoDB Atlas or local databases that lack these new fields, run:
-
-```bash
-npm run migrate:backfill
-# Or preview without making changes:
-npm run migrate:backfill -- --dry-run
-```
-
-### Backfill Logic:
-1. **`startTime`**: Populated from `createdAt`, falling back to document timestamp or current date.
-2. **`dayOfWeek`**: Derived via calendar index from `startTime`.
-3. **`taskPriority`**: Retrieved by querying the linked `Task` document. If the task no longer exists or was unlinked, safely defaulted to `'Medium'`.
-4. **`durationMinutes`**: Migrated from legacy `duration` (defaulting to 25 minutes).
-5. **`completed` & `status`**: Set to `true` and `'completed'` for all legacy records (as FocusFlow historically only persisted finished sessions).
-6. **`actualDurationMinutes`**: Equal to `durationMinutes` for completed sessions.
+- ⏱️ **Interactive Pomodoro Timer**: Seamless switching between Focus (25m), Short Break (5m), and Long Break (15m), complete with a circular progress dial and audio chime.
+- 🧠 **AI Smart Session Suggestions**: Evaluates 24-hour completion probabilities using a trained classification model blended with empirical Bayesian shrinkage.
+- 📋 **Task Management**: Prioritized study tasks (High, Medium, Low) integrated with active focus timers.
+- 🔒 **Secure Multi-User Architecture**: JWT-based authentication ensuring complete user data isolation.
+- ⚡ **High Performance Caching**: In-memory caching with 10-minute TTL and automatic cache invalidation upon session completion.
+- 🛡️ **Fault-Tolerant Resilience**: If the ML service is down or times out, the backend gracefully responds with status `"unavailable"` (HTTP 200) without ever failing.
 
 ---
 
-## 4. Scripts Overview
+## 🏗️ Architecture Overview
 
-### A. Seed Sample User & Sessions
-Creates a test user (`Haridharani B`), associated tasks across High/Medium/Low priorities, and 30 realistic sessions spanning the past 3 weeks.
-```bash
-npm run seed:sample
+```text
+[ Browser / Client ] 
+        │
+        ├──▶ [ Express Backend API (Port 5000) ]
+        │         ├── JWT Authentication Middleware
+        │         ├── MongoDB Mongoose (Sessions, Tasks, Users)
+        │         └── In-Memory Suggestions Cache (10-min TTL)
+        │                     │
+        │                     ▼ Axios (3000ms timeout)
+        │
+        └──▶ [ Python ML Microservice (FastAPI - Port 8000) ]
+                  ├── Scikit-Learn Model (Random Forest / Logistic Regression)
+                  ├── 24-Hour Circadian Focus Scoring
+                  └── Adjacent Window Extraction Engine
 ```
 
-### B. User Session History Exporter
-Connects to MongoDB, extracts a user's session history, cleans features, and exports clean CSV and JSON datasets.
-```bash
-npm run export:user
-# Target specific user:
-node scripts/export_user_sessions.js --email=haridharani.focus@example.com --format=both
-```
-- **Output files**:
-  - `exports/user_sessions_<userId>.csv`
-  - `exports/user_sessions_<userId>.json`
-- **Columns**: `time_of_day,day_of_week,task_priority,duration_minutes,completed`
+---
 
-### C. Synthetic Session Data Generator
-Generates realistic multi-user session datasets with behavioral variations (circadian focus curves, fatigue dips, user personas, task priorities).
+## 🚀 Quick Start Guide
+
+### 1. Clone & Install Dependencies
+
 ```bash
-npm run generate:synthetic
-# Options:
-node scripts/generate_synthetic_sessions.js --users=6 --sessionsPerUser=100
+git clone https://github.com/kit2824bad054/-Focus_Flow.git
+cd -Focus_Flow
+
+# Install Node.js backend dependencies
+npm install
+
+# Install Python ML dependencies
+cd ml-service
+pip install -r requirements.txt
+cd ..
 ```
-- **Output files**:
-  - `exports/synthetic_sessions.csv` (clean ML features)
-  - `exports/synthetic_sessions.json`
-  - `exports/synthetic_sessions_full_metadata.json`
-- **Database**: Populates the dedicated test collection `synthetic_sessions` in MongoDB without affecting production session data.
+
+### 2. Configure Environment
+
+Copy `.env.example` to `.env`:
+```bash
+cp .env.example .env
+```
+
+```env
+PORT=5000
+NODE_ENV=development
+MONGO_URI=mongodb://127.0.0.1:27017/focusflow
+ML_SERVICE_URL=http://localhost:8000
+ML_SERVICE_TIMEOUT_MS=3000
+JWT_SECRET=focusflow_jwt_secret_key_2026
+```
+
+### 3. One-Click Launcher (Windows)
+Double-click `start_focusflow.bat` or run:
+```bash
+.\start_focusflow.bat
+```
+
+### Or Start Manually:
+```bash
+# Terminal 1: Start ML Microservice
+cd ml-service
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+
+# Terminal 2: Start Express Backend & Web App
+npm start
+```
+
+Open your browser at:
+- **Web App**: [http://localhost:5000](http://localhost:5000)
+- **ML API Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- **Live Demo**: [https://kit2824bad054.github.io/-Focus_Flow/](https://kit2824bad054.github.io/-Focus_Flow/)
+
+---
+
+## 📊 ML Microservice & Model Performance
+
+The Python microservice trains and compares three scikit-learn models on synthetic and empirical Pomodoro session histories:
+
+| Model | Accuracy | Precision | Recall | F1-Score | Status |
+|---|---|---|---|---|---|
+| **Logistic Regression** | 84.17% | 84.03% | 100.00% | **0.9132** | Selected Best |
+| **Random Forest** | 83.33% | 84.48% | 98.00% | 0.9074 | Candidate |
+| **Decision Tree** | 79.17% | 84.40% | 92.00% | 0.8804 | Baseline |
+
+### Retrain Model:
+```bash
+python ml-service/training/train.py
+```
+
+---
+
+## 📡 Key API Endpoints
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/health` | None | System health and MongoDB status |
+| `POST` | `/api/auth/register` | None | User registration with JWT generation |
+| `POST` | `/api/auth/login` | None | User login and token authentication |
+| `GET` | `/api/suggestions` | **JWT** | Returns top 3 suggested focus windows for authenticated user |
+| `GET` | `/api/tasks` | Optional | Retrieve user tasks |
+| `POST` | `/api/tasks` | Optional | Create new study task |
+| `GET` | `/api/sessions` | Optional | Retrieve session history |
+| `POST` | `/api/sessions` | Optional | Record session and invalidate ML suggestion cache |
+
+---
+
+## ⚙️ Enabling GitHub Pages
+
+To make the live URL active on GitHub:
+1. Go to your GitHub repository: `https://github.com/kit2824bad054/-Focus_Flow`
+2. Click **Settings** > **Pages** (under Code and automation)
+3. Under **Build and deployment** > **Branch**:
+   - Select branch: **`main`**
+   - Select folder: **`/docs`**
+4. Click **Save**.
+5. Your website will be live at: **`https://kit2824bad054.github.io/-Focus_Flow/`**!

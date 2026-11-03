@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FocusFlow - Smart Pomodoro Study Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Background Glows -->
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <div class="app-container">
+    <!-- Navbar Header -->
+    <header class="header">
+      <div class="brand">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>FocusFlow</h1>
+          <span class="badge-tag">AI Powered Study Tracker</span>
+        </div>
+      </div>
+
+      <div class="system-status">
+        <div class="status-pill" id="backendStatus">
+          <span class="dot green"></span>
+          <span>Backend: Online</span>
+        </div>
+        <div class="status-pill" id="mlStatus">
+          <span class="dot purple"></span>
+          <span>ML Engine: Ready</span>
+        </div>
+        <div class="status-pill" id="dbStatus">
+          <span class="dot blue"></span>
+          <span>Database: Active</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Grid Content -->
+    <main class="main-grid">
+      <!-- Left Column: Pomodoro Timer & Quick Stats -->
+      <section class="left-col">
+        <!-- Timer Card -->
+        <div class="card timer-card">
+          <!-- Mode Tabs -->
+          <div class="timer-modes">
+            <button class="mode-btn active" data-mode="focus" data-duration="25">Focus (25m)</button>
+            <button class="mode-btn" data-mode="short-break" data-duration="5">Short Break (5m)</button>
+            <button class="mode-btn" data-mode="long-break" data-duration="15">Long Break (15m)</button>
+          </div>
+
+          <!-- Active Task Notice -->
+          <div class="active-task-indicator" id="activeTaskIndicator">
+            <span class="task-label">Current Focus Task:</span>
+            <span class="task-name" id="currentTaskName">No task selected (General Study)</span>
+          </div>
+
+          <!-- Circular Dial Display -->
+          <div class="timer-display-wrap">
+            <svg class="progress-ring" width="280" height="280">
+              <circle class="ring-bg" stroke="#1f2937" stroke-width="10" fill="transparent" r="125" cx="140" cy="140"/>
+              <circle class="ring-progress" id="progressRing" stroke="url(#timerGradient)" stroke-width="10" stroke-linecap="round" fill="transparent" r="125" cx="140" cy="140"/>
+              <defs>
+                <linearGradient id="timerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#6366f1" />
+                  <stop offset="100%" stop-color="#ec4899" />
+                </linearGradient>
+              </defs>
+            </svg>
+            <div class="timer-text">
+              <span class="time" id="timeDisplay">25:00</span>
+              <span class="timer-status" id="timerStatus">Ready to focus</span>
+            </div>
+          </div>
+
+          <!-- Controls -->
+          <div class="timer-controls">
+            <button class="btn btn-primary" id="startBtn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              <span>Start</span>
+            </button>
+            <button class="btn btn-secondary" id="pauseBtn" disabled>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="6" y="4" width="4" height="16"></rect>
+                <rect x="14" y="4" width="4" height="16"></rect>
+              </svg>
+              <span>Pause</span>
+            </button>
+            <button class="btn btn-ghost" id="resetBtn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                <path d="M3 3v5h5"></path>
+              </svg>
+              <span>Reset</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick Stats Banner -->
+        <div class="stats-row">
+          <div class="stat-card">
+            <span class="stat-num" id="statCompleted">0</span>
+            <span class="stat-title">Sessions Completed</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-num" id="statMinutes">0</span>
+            <span class="stat-title">Focus Minutes</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-num" id="statRate">100%</span>
+            <span class="stat-title">Completion Rate</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: AI Suggestions & Task Management -->
+      <section class="right-col">
+        <!-- AI Smart Session Suggestions Card -->
+        <div class="card ai-card">
+          <div class="card-header">
+            <div class="header-title">
+              <div class="sparkle-icon">✨</div>
+              <div>
+                <h2>AI Smart Focus Windows</h2>
+                <p>Personalized optimal study times predicted by Machine Learning</p>
+              </div>
+            </div>
+            <button class="btn-icon" id="refreshAiBtn" title="Re-sync with ML Engine">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+              </svg>
+            </button>
+          </div>
+
+          <div class="suggestions-list" id="suggestionsContainer">
+            <div class="loading-state">Analyzing circadian focus curves and session history...</div>
+          </div>
+
+          <div class="ai-footer">
+            <span class="ai-source-tag" id="aiSourceTag">Powered by Scikit-Learn Model & Empirical Bayes</span>
+          </div>
+        </div>
+
+        <!-- Task Management Card -->
+        <div class="card task-card">
+          <div class="card-header">
+            <h2>Today's Focus Tasks</h2>
+            <span class="task-count" id="taskCountBadge">4 Tasks</span>
+          </div>
+
+          <!-- Add Task Input Form -->
+          <form class="task-form" id="taskForm">
+            <input type="text" id="taskInput" placeholder="Add a new task (e.g., ML Feature Engineering)..." required />
+            <select id="prioritySelect">
+              <option value="High">High Priority</option>
+              <option value="Medium" selected>Medium Priority</option>
+              <option value="Low">Low Priority</option>
+            </select>
+            <button type="submit" class="btn btn-sm btn-primary">Add Task</button>
+          </form>
+
+          <!-- Task List -->
+          <div class="task-list" id="taskList">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- Recent Session History -->
+        <div class="card history-card">
+          <div class="card-header">
+            <h2>Recent Study Sessions</h2>
+            <button class="btn-text" id="logCustomBtn">+ Quick Log Session</button>
+          </div>
+          <div class="history-list" id="historyList">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>FocusFlow &bull; Cloud-Based Pomodoro Study Tracker with Smart Session Suggestions</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
+
